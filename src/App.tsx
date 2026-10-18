@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 
 type IconName =
   | "arrow"
@@ -24,7 +24,7 @@ type IconName =
   | "user";
 
 function Icon({ name, size = 20 }: { name: IconName; size?: number }) {
-  const paths: Record<IconName, ReactNode> = {
+  const paths: Record<IconName, React.ReactNode> = {
     arrow: <><path d="M4 12h16" /><path d="m14 6 6 6-6 6" /></>,
     cart: <><circle cx="9" cy="20" r="1" /><circle cx="19" cy="20" r="1" /><path d="M3 4h2l2.5 11h10l2-7H7" /></>,
     check: <path d="m5 12 4 4L19 6" />,
@@ -54,59 +54,24 @@ type Product = {
   id: number;
   name: string;
   category: "Impresión 3D" | "Sublimación";
-  category_id?: number;
-  slug?: string;
   price: number;
   image: string;
   tag?: string;
   visible: boolean;
-  featured?: boolean;
-  customizable?: boolean;
-  stock?: number;
   description: string;
 };
 
-const API_BASE = "https://triniumdb.infinityfree.io/api";
-const WA_NUMBER = "573000000000"; // Reemplaza por el WhatsApp real de TRINiUM.
-const DEFAULT_IMAGE = "https://images.unsplash.com/photo-1703221561813-cdaa308cf9e7?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&q=85&w=900&h=1000";
-
-const initialProducts: Product[] = [];
+const initialProducts: Product[] = [
+  { id: 1, name: "Macetero Voronoi", category: "Impresión 3D", price: 12990, image: "https://images.unsplash.com/photo-1703221561813-cdaa308cf9e7?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&q=85&w=900&h=1000", tag: "Best seller", visible: true, description: "Geometría generativa impresa en PLA premium. Color y escala a elección." },
+  { id: 2, name: "Pocillo Signature", category: "Sublimación", price: 8990, image: "https://images.unsplash.com/photo-1720698992880-ae93ea16aac9?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&q=85&w=900&h=1000", tag: "Personalizable", visible: true, description: "Tu identidad, fotografía o concepto transferido en alta definición." },
+  { id: 3, name: "Dragón Flex", category: "Impresión 3D", price: 15990, image: "https://images.unsplash.com/photo-1707735325033-af8b8ad6a01f?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&q=85&w=900&h=1000", tag: "Nuevo", visible: true, description: "Pieza articulada de una sola impresión, con acabado multicolor." },
+  { id: 4, name: "Chromatic Set", category: "Sublimación", price: 24990, image: "https://images.unsplash.com/photo-1573317004357-91bfead79b7c?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&q=85&w=900&h=1000", visible: true, description: "Set de cuatro pocillos para marcas, equipos o regalos con intención." },
+  { id: 5, name: "Desk System 01", category: "Impresión 3D", price: 10990, image: "https://images.unsplash.com/photo-1750069685806-1353ddc24b5b?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&q=85&w=900&h=1000", visible: true, description: "Organización modular paramétrica para transformar tu espacio." },
+  { id: 6, name: "Flora Edition", category: "Sublimación", price: 9990, image: "https://images.unsplash.com/photo-1630513832671-022365184f0b?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&q=85&w=900&h=1000", tag: "Limited", visible: true, description: "Ilustración envolvente, tonos intensos y terminación de alto brillo." },
+];
 
 const money = (value: number) =>
-  new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(value);
-
-type ApiResponse<T> = { success: boolean; message: string; data: T; errors?: unknown };
-
-async function api<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const token = localStorage.getItem("trinium_admin_token");
-  const headers = new Headers(options.headers);
-  headers.set("Content-Type", "application/json");
-  if (token) headers.set("Authorization", `Bearer ${token}`);
-  const response = await fetch(`${API_BASE}${path}`, { ...options, headers });
-  const body = (await response.json().catch(() => ({}))) as ApiResponse<T>;
-  if (!response.ok || body.success === false) {
-    throw new Error(body.message || `Error HTTP ${response.status}`);
-  }
-  return body.data;
-}
-
-function mapProduct(raw: any): Product {
-  return {
-    id: Number(raw.id),
-    name: raw.name,
-    category: raw.category === "Sublimación" ? "Sublimación" : "Impresión 3D",
-    category_id: Number(raw.category_id ?? (raw.category_slug === "sublimacion" ? 2 : 1)),
-    slug: raw.slug,
-    price: Number(raw.price),
-    image: raw.image || DEFAULT_IMAGE,
-    tag: raw.tag || undefined,
-    visible: Boolean(Number(raw.visible)),
-    featured: Boolean(Number(raw.featured)),
-    customizable: Boolean(Number(raw.customizable)),
-    stock: Number(raw.stock ?? 0),
-    description: raw.description || "",
-  };
-}
+  new Intl.NumberFormat("es-CL", { style: "currency", currency: "CLP" }).format(value);
 
 function useReveal() {
   useEffect(() => {
@@ -130,44 +95,27 @@ function Brand() {
 
 export default function App() {
   useReveal();
-  const [products, setProducts] = useState<Product[]>(initialProducts);
+  const [products, setProducts] = useState(initialProducts);
   const [category, setCategory] = useState("Todos");
-  const [cart, setCart] = useState<Record<number, number>>(() => JSON.parse(localStorage.getItem("trinium_cart") || "{}"));
-  const [favorites, setFavorites] = useState<number[]>(() => JSON.parse(localStorage.getItem("trinium_favorites") || "[]"));
+  const [cart, setCart] = useState<Record<number, number>>({});
+  const [favorites, setFavorites] = useState<number[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [admin, setAdmin] = useState(Boolean(localStorage.getItem("trinium_admin_token")));
+  const [admin, setAdmin] = useState(false);
   const [editing, setEditing] = useState<Product | null>(null);
   const [adminSearch, setAdminSearch] = useState("");
   const [toast, setToast] = useState("");
-  const [loading, setLoading] = useState(true);
 
   const shownProducts = products.filter((product) => product.visible && (category === "Todos" || product.category === category));
   const cartProducts = products.filter((product) => cart[product.id]);
-  const cartCount = (Object.values(cart) as number[]).reduce((sum, quantity) => sum + quantity, 0);
+  const cartCount = Object.values(cart).reduce((sum, quantity) => sum + quantity, 0);
   const total = cartProducts.reduce((sum, product) => sum + product.price * cart[product.id], 0);
 
   const notify = (message: string) => {
     setToast(message);
     window.setTimeout(() => setToast(""), 2400);
   };
-
-  useEffect(() => {
-    localStorage.setItem("trinium_cart", JSON.stringify(cart));
-  }, [cart]);
-  useEffect(() => {
-    localStorage.setItem("trinium_favorites", JSON.stringify(favorites));
-  }, [favorites]);
-  useEffect(() => {
-    let active = true;
-    api<any[]>("/products")
-      .then((data) => active && setProducts(data.map(mapProduct)))
-      .catch(() => active && notify("No se pudo cargar el catálogo desde la API"))
-      .finally(() => active && setLoading(false));
-    return () => { active = false; };
-  }, []);
-
   const add = (id: number) => {
     setCart((current) => ({ ...current, [id]: (current[id] || 0) + 1 }));
     notify("Añadido a tu selección");
@@ -179,70 +127,19 @@ export default function App() {
       return updated;
     });
   };
-  const sendOrder = async () => {
-    if (!cartProducts.length) return;
-    try {
-      const detail = cartProducts.map((p) => `• ${cart[p.id]}x ${p.name} — ${money(p.price * cart[p.id])}`).join("\n");
-      await api<{ id: number }>("/orders", {
-        method: "POST",
-        body: JSON.stringify({
-          customer_name: "Cliente web TRINiUM",
-          total,
-          notes: "Pedido generado desde la tienda web.",
-          items: cartProducts.map((p) => ({ product_id: p.id, quantity: cart[p.id], unit_price: p.price, subtotal: p.price * cart[p.id] })),
-        }),
-      });
-      const message = encodeURIComponent(`Hola TRINiUM, quiero crear este pedido:\n\n${detail}\n\nTotal: ${money(total)}\n\nQuiero conversar sobre la personalización.`);
-      window.open(`https://wa.me/${WA_NUMBER}?text=${message}`, "_blank", "noopener,noreferrer");
-      notify("Pedido registrado y listo para WhatsApp");
-    } catch (error) {
-      notify(error instanceof Error ? error.message : "No se pudo registrar el pedido");
-    }
+  const sendOrder = () => {
+    const detail = cartProducts.map((p) => `• ${cart[p.id]}x ${p.name} — ${money(p.price * cart[p.id])}`).join("\n");
+    const message = encodeURIComponent(`Hola TRINiUM, quiero crear este pedido:\n\n${detail}\n\nTotal: ${money(total)}\n\nQuiero conversar sobre la personalización.`);
+    window.open(`https://wa.me/56912345678?text=${message}`, "_blank", "noopener,noreferrer");
   };
-
-  const saveProduct = async (event: FormEvent<HTMLFormElement>) => {
+  const saveProduct = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!editing) return;
-    const payload = {
-      category_id: editing.category_id ?? (editing.category === "Sublimación" ? 2 : 1),
-      name: editing.name,
-      slug: editing.slug || editing.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""),
-      description: editing.description,
-      price: editing.price,
-      image: editing.image,
-      stock: editing.stock ?? 0,
-      visible: editing.visible ? 1 : 0,
-      featured: editing.featured ? 1 : 0,
-      customizable: editing.customizable ? 1 : 0,
-      tag: editing.tag || null,
-    };
-    try {
-      if (editing.id > 0 && products.some((p) => p.id === editing.id)) {
-        await api(`/products/${editing.id}`, { method: "PUT", body: JSON.stringify(payload) });
-      } else {
-        await api(`/products`, { method: "POST", body: JSON.stringify(payload) });
-      }
-      const fresh = await api<any[]>("/products");
-      setProducts(fresh.map(mapProduct));
-      setEditing(null);
-      notify("Producto sincronizado con MySQL");
-    } catch (error) {
-      notify(error instanceof Error ? error.message : "No se pudo guardar el producto");
-    }
-  };
-
-  const loginAdmin = async (email: string, password: string) => {
-    const data = await api<{ token: string }>("/auth/login", { method: "POST", body: JSON.stringify({ email, password }) });
-    localStorage.setItem("trinium_admin_token", data.token);
-    setAdmin(true);
-    setLoginOpen(false);
-    notify("Acceso autorizado");
-  };
-
-  const logoutAdmin = async () => {
-    try { await api("/auth/logout", { method: "POST" }); } catch {}
-    localStorage.removeItem("trinium_admin_token");
-    setAdmin(false);
+    setProducts((current) => current.some((p) => p.id === editing.id)
+      ? current.map((p) => p.id === editing.id ? editing : p)
+      : [editing, ...current]);
+    setEditing(null);
+    notify("Producto sincronizado");
   };
 
   if (admin) {
@@ -256,10 +153,10 @@ export default function App() {
         onEdit={setEditing}
         onClose={() => setEditing(null)}
         onSave={saveProduct}
-        onNew={() => setEditing({ id: 0, name: "", category: "Impresión 3D", category_id: 1, price: 0, image: DEFAULT_IMAGE, visible: true, description: "", stock: 0, customizable: true })}
-        onToggle={async (id) => { const p = products.find((item) => item.id === id); if (!p) return; try { await api(`/products/${id}`, { method: "PUT", body: JSON.stringify({ category_id: p.category_id ?? 1, name: p.name, slug: p.slug, price: p.price, description: p.description, image: p.image, stock: p.stock ?? 0, visible: p.visible ? 0 : 1, featured: p.featured ? 1 : 0, customizable: p.customizable ? 1 : 0, tag: p.tag || null }) }); const fresh = await api<any[]>("/products"); setProducts(fresh.map(mapProduct)); notify("Visibilidad actualizada"); } catch (error) { notify(error instanceof Error ? error.message : "No se pudo actualizar"); } }}
-        onDelete={async (id) => { try { await api(`/products/${id}`, { method: "DELETE" }); setProducts((current) => current.filter((p) => p.id !== id)); notify("Producto eliminado"); } catch (error) { notify(error instanceof Error ? error.message : "No se pudo eliminar"); } }}
-        onLogout={logoutAdmin}
+        onNew={() => setEditing({ id: Date.now(), name: "", category: "Impresión 3D", price: 0, image: initialProducts[0].image, visible: true, description: "" })}
+        onToggle={(id) => setProducts((current) => current.map((p) => p.id === id ? { ...p, visible: !p.visible } : p))}
+        onDelete={(id) => { setProducts((current) => current.filter((p) => p.id !== id)); notify("Producto eliminado"); }}
+        onLogout={() => setAdmin(false)}
       />
     );
   }
@@ -299,7 +196,7 @@ export default function App() {
               <p>Impresión 3D y sublimación de nueva generación. Diseñamos piezas únicas, funcionales y hechas para llevar tu identidad.</p>
               <div className="hero-buttons">
                 <a className="button-primary magnetic" href="#productos"><span>Explorar colección</span><Icon name="arrow" /></a>
-                <a className="button-link" href={`https://wa.me/${WA_NUMBER}`} target="_blank" rel="noreferrer"><span className="play-dot"><Icon name="message" size={17} /></span>Crear algo único</a>
+                <a className="button-link" href="https://wa.me/56912345678" target="_blank" rel="noreferrer"><span className="play-dot"><Icon name="message" size={17} /></span>Crear algo único</a>
               </div>
               <div className="hero-metrics">
                 <div><strong>500<span>+</span></strong><small>Piezas creadas</small></div>
@@ -321,7 +218,7 @@ export default function App() {
           </div>
           <div className="hero-footer shell">
             <span>SCROLL TO DISCOVER</span><i />
-            <span>EST. 2025 — COLOMBIA</span>
+            <span>EST. 2025 — CHILE</span>
           </div>
         </section>
 
@@ -344,7 +241,7 @@ export default function App() {
                 <div className="card-noise" />
                 <div className="cap-card-head"><span>01</span><Icon name="arrow" /></div>
                 <div className="layer-sculpture">
-                  {[86, 108, 128, 145, 158, 165, 168, 164, 154, 142, 126, 112, 103, 108, 119, 130].map((width, index) => <i key={index} style={{ "--layer-width": `${width}px`, "--delay": `${index * 0.06}s` } as CSSProperties} />)}
+                  {[86, 108, 128, 145, 158, 165, 168, 164, 154, 142, 126, 112, 103, 108, 119, 130].map((width, index) => <i key={index} style={{ "--layer-width": `${width}px`, "--delay": `${index * 0.06}s` } as React.CSSProperties} />)}
                   <span className="nozzle" />
                 </div>
                 <div className="cap-card-copy"><small>FABRICACIÓN ADITIVA</small><h3>Impresión 3D</h3><p>Figuras, prototipos y objetos funcionales construidos capa por capa con precisión.</p><span className="explore">Explorar piezas <Icon name="arrow" size={16} /></span></div>
@@ -368,8 +265,8 @@ export default function App() {
               </div>
             </div>
             <div className="product-grid">
-              {loading ? <div className="reveal is-visible" style={{ padding: "3rem 0" } as CSSProperties}>Cargando colección desde TRINiUM API…</div> : shownProducts.map((product, index) => (
-                <article className="product-card reveal" style={{ "--reveal-delay": `${(index % 3) * 0.08}s` } as CSSProperties} key={product.id}>
+              {shownProducts.map((product, index) => (
+                <article className="product-card reveal" style={{ "--reveal-delay": `${(index % 3) * 0.08}s` } as React.CSSProperties} key={product.id}>
                   <div className="product-media">
                     <img src={product.image} alt={product.name} loading="lazy" />
                     <div className="product-gradient" />
@@ -399,7 +296,7 @@ export default function App() {
                 ["03", "Producción", "Creamos y controlamos cada capa, color y detalle."],
                 ["04", "Entrega", "Coordinamos para que llegue impecable a tus manos."],
               ].map(([number, title, text], index) => (
-                <div className="process-step reveal" style={{ "--reveal-delay": `${index * 0.1}s` } as CSSProperties} key={number}>
+                <div className="process-step reveal" style={{ "--reveal-delay": `${index * 0.1}s` } as React.CSSProperties} key={number}>
                   <div className="step-node"><span>{number}</span><i /></div>
                   <h3>{title}</h3><p>{text}</p>
                 </div>
@@ -411,7 +308,7 @@ export default function App() {
         <section className="studio section" id="estudio">
           <div className="shell studio-panel reveal">
             <div className="studio-grid" />
-            <div className="studio-copy"><span className="overline">04 / TU PRÓXIMA IDEA</span><h2>No buscamos hacer<br />más de lo mismo.</h2><p>Si puedes imaginarlo, conversemos. Nuestro trabajo empieza donde termina el catálogo.</p><a className="button-primary" href={`https://wa.me/${WA_NUMBER}`} target="_blank" rel="noreferrer"><span>Iniciar un proyecto</span><Icon name="arrow" /></a></div>
+            <div className="studio-copy"><span className="overline">04 / TU PRÓXIMA IDEA</span><h2>No buscamos hacer<br />más de lo mismo.</h2><p>Si puedes imaginarlo, conversemos. Nuestro trabajo empieza donde termina el catálogo.</p><a className="button-primary" href="https://wa.me/56912345678" target="_blank" rel="noreferrer"><span>Iniciar un proyecto</span><Icon name="arrow" /></a></div>
             <div className="studio-mark"><div className="mark-rings" /><img src="/assets/trinium-mark-flat.png" alt="" loading="lazy" /><span>MAKE IT REAL</span></div>
           </div>
         </section>
@@ -421,14 +318,14 @@ export default function App() {
         <div className="shell footer-main">
           <Brand />
           <p>Fabricación digital para ideas<br />que merecen existir.</p>
-          <div><a href="#productos">Colección</a><a href="#proceso">Proceso</a><a href={`https://wa.me/${WA_NUMBER}`}>WhatsApp</a></div>
-          <span>© 2026 TRINiUM<br />HECHO EN COLOMBIA</span>
+          <div><a href="#productos">Colección</a><a href="#proceso">Proceso</a><a href="https://wa.me/56912345678">WhatsApp</a></div>
+          <span>© 2025 TRINiUM<br />HECHO EN CHILE</span>
         </div>
         <div className="footer-word">TRIN<span>i</span>UM</div>
       </footer>
 
       {cartOpen && <CartDrawer products={cartProducts} quantities={cart} total={total} onClose={() => setCartOpen(false)} onQuantity={quantity} onSend={sendOrder} />}
-      {loginOpen && <LoginModal onClose={() => setLoginOpen(false)} onLogin={loginAdmin} />}
+      {loginOpen && <LoginModal onClose={() => setLoginOpen(false)} onLogin={() => { setLoginOpen(false); setAdmin(true); }} />}
       {toast && <div className="toast"><span><Icon name="check" size={14} /></span>{toast}</div>}
     </div>
   );
@@ -449,22 +346,17 @@ function CartDrawer({ products, quantities, total, onClose, onQuantity, onSend }
   );
 }
 
-function LoginModal({ onClose, onLogin }: { onClose: () => void; onLogin: (email: string, password: string) => Promise<void> }) {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [busy, setBusy] = useState(false);
+function LoginModal({ onClose, onLogin }: { onClose: () => void; onLogin: () => void }) {
   return (
     <div className="overlay centered" onMouseDown={onClose}>
-      <form className="login-modal" onSubmit={async (event) => { event.preventDefault(); setBusy(true); setError(""); try { await onLogin(email, password); } catch (e) { setError(e instanceof Error ? e.message : "Credenciales inválidas"); } finally { setBusy(false); } }} onMouseDown={(event) => event.stopPropagation()}>
+      <form className="login-modal" onSubmit={(event) => { event.preventDefault(); onLogin(); }} onMouseDown={(event) => event.stopPropagation()}>
         <button className="modal-x" type="button" onClick={onClose}><Icon name="close" /></button>
         <img src="/assets/trinium-mark-flat.png" alt="" />
         <span>TRINIUM / CONTROL</span><h2>Acceso al sistema</h2><p>Administra productos, visibilidad y pedidos.</p>
-        <label>Correo<input value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="admin@trinium.local" required /></label>
-        <label>Contraseña<input value={password} onChange={(e) => setPassword(e.target.value)} type="password" placeholder="••••••••" required /></label>
-        {error && <small style={{ color: "#ff6b6b" }}>{error}</small>}
-        <button className="button-primary submit" type="submit" disabled={busy}>{busy ? "Validando…" : "Ingresar"} <Icon name="arrow" /></button>
-        <small>Acceso protegido por TRINiUM API.</small>
+        <label>Correo<input type="email" placeholder="admin@trinium.cl" required /></label>
+        <label>Contraseña<input type="password" placeholder="••••••••" required /></label>
+        <button className="button-primary submit" type="submit">Ingresar <Icon name="arrow" /></button>
+        <small>DEMO: CUALQUIER CREDENCIAL ES VÁLIDA</small>
       </form>
     </div>
   );
