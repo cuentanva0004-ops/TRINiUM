@@ -1,0 +1,10 @@
+{
+  "description": "This platform enables users to sell 3D printing and sublimation products via WhatsApp, featuring an admin system for managing listings efficiently.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
